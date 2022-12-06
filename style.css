@@ -1,0 +1,16 @@
+#warn {
+    visibility: collapse;
+}
+
+.BoxCell {
+    height: 100px;
+    width: 100px;
+}
+
+#CB {
+    color: rgb(243, 237, 237);
+}
+
+#HB {
+    color: rgb(190, 186, 186);
+}
