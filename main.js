@@ -51,40 +51,52 @@ function CreateCell(a,b) {
         let targ = e.target
         let row = targ.getAttribute('data-row')
         let column = targ.getAttribute('data-col')
+        let k = 0
         if (CellValidate(row,column) === true) {
             let pc = currentPlayer.pcode
             TTTBoard[row][column] = pc
             if (pc === 1) {
                 targ.innerHTML = 'O'
-                currentPlayer = Players[1]
+                if (GameType === 1) {
+                    currentPlayer = Players[1]
+                }
             }
-            else {
+            if (pc === 2) {
                 targ.innerHTML = 'X'
                 currentPlayer = Players[0]
             }
+            k =0
         }
         else {
             warnBox.innerHTML = "Another Player has used this spot"
             warnBox.style.visibility = 'visible'
+            k =1
         }
         CheckWin()
-        if (WinStat === 1) {
-            board.style.display = 'none'
-            warnBox.innerHTML = "Player 1 has won"
-            warnBox.style.visibility = 'visible'
-        }
-        if (WinStat === 2) {
-            board.style.display = 'none'
-            warnBox.innerHTML = "Player 2 has won"
-            warnBox.style.visibility = 'visible'
-        }
-        if (WinStat === 3) {
-            board.style.display = 'none'
-            warnBox.innerHTML = "It is a Tie"
-            warnBox.style.visibility = 'visible'
+        if (GameType === 0 && k === 0) {
+            ComputerMove()
+            CheckWin()
         }
     })
     board.appendChild(cell);
+}
+
+function ComputerMove() {
+    let k = []
+    for(i = 0; i < 3; i++) {
+        for(j=0; j<3; j++) {
+            if (TTTBoard[i][j] === 0) {
+                let m = document.querySelector(`[data-row="${i}"][data-col="${j}"]`)
+                k.push(m)
+            }
+        }
+    }
+    let n = Math.floor(Math.random()*(k.length-1))
+    let cell = k[n]
+    cell.innerHTML = 'X'
+    let a = cell.getAttribute('data-row')
+    let b = cell.getAttribute('data-col')
+    TTTBoard[a][b] = 2
 }
 
 function CheckWin() {
@@ -96,6 +108,21 @@ function CheckWin() {
     }
     if (TieCheck() === true) {
         WinStat = 3
+    }
+    if (WinStat === 1) {
+        board.style.display = 'none'
+        warnBox.innerHTML = "Player 1 has won"
+        warnBox.style.visibility = 'visible'
+    }
+    if (WinStat === 2) {
+        board.style.display = 'none'
+        warnBox.innerHTML = "Player 2 has won"
+        warnBox.style.visibility = 'visible'
+    }
+    if (WinStat === 3) {
+        board.style.display = 'none'
+        warnBox.innerHTML = "It is a Tie"
+        warnBox.style.visibility = 'visible'
     }
 }
 
