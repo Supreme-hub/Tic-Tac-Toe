@@ -4,12 +4,12 @@ const ResBtn = document.querySelector('#Restart')
 const CB = document.querySelector('#Computer')
 const HB = document.querySelector('#Human')
 // 0 = Vs Comp; 1 = Vs Human;
-let GameType = 1;
+let GameType = 0;
 let TTTBoard = [[0,0,0],[0,0,0],[0,0,0]];
 let Players= [];
 // 0 = false, 1 = O, 2 = 1, 3 = Tie 
-let WinStat = 0;
-
+let WinStat;
+let turn;
 
 
 function CellValidate(m,n) {
@@ -65,6 +65,7 @@ function CreateCell(a,b) {
                 targ.innerHTML = 'X'
                 currentPlayer = Players[0]
             }
+            turn++
             k =0
         }
         else {
@@ -72,65 +73,146 @@ function CreateCell(a,b) {
             warnBox.style.visibility = 'visible'
             k =1
         }
-        CheckWin()
+        CheckWin(TTTBoard)
+        if (WinStat === -10) {
+            board.style.display = 'none'
+            warnBox.innerHTML = "Player 1 has won"
+            warnBox.style.visibility = 'visible'
+        }
+        if (WinStat === 10) {
+            board.style.display = 'none'
+            warnBox.innerHTML = "Player 2 has won"
+            warnBox.style.visibility = 'visible'
+        }
+        if (TieCheck(TTTBoard) === true) {
+            board.style.display = 'none'
+            warnBox.innerHTML = "It is a Tie"
+            warnBox.style.visibility = 'visible'
+        }
         if (GameType === 0 && k === 0) {
-            ComputerMove()
-            CheckWin()
+            ComputerMove(TTTBoard)
+            turn++
+            CheckWin(TTTBoard)
+            if (WinStat === -10) {
+                board.style.display = 'none'
+                warnBox.innerHTML = "Player 1 has won"
+                warnBox.style.visibility = 'visible'
+            }
+            if (WinStat === 10) {
+                board.style.display = 'none'
+                warnBox.innerHTML = "Player 2 has won"
+                warnBox.style.visibility = 'visible'
+            }
+            if (TieCheck(TTTBoard) === true) {
+                board.style.display = 'none'
+                warnBox.innerHTML = "It is a Tie"
+                warnBox.style.visibility = 'visible'
+            }
         }
     })
     board.appendChild(cell);
 }
 
-function ComputerMove() {
-    let k = []
-    for(i = 0; i < 3; i++) {
-        for(j=0; j<3; j++) {
-            if (TTTBoard[i][j] === 0) {
-                let m = document.querySelector(`[data-row="${i}"][data-col="${j}"]`)
-                k.push(m)
+function ComputerMove(currentBoard) {
+    let move = getBestMove(currentBoard)
+    let a = move[0]
+    let b = move[1]
+    currentBoard[a][b] = 2
+    let cell = document.querySelector(`[data-row="${a}"][data-col="${b}"]`)
+    cell.innerHTML = "X"
+}
+
+function getBestMove(currentBoard) {
+    let bestVal = +Infinity
+    let bestMove = [-1,-1]
+    
+    for (let i=0;i<3;i++) {
+        for(let j=0;j<3;j++) {
+            if (currentBoard[i][j] === 0) {
+                let temp = currentBoard[i][j]
+                currentBoard[i][j] = 1
+                let moveVal = minMax(currentBoard,0, true)
+                currentBoard[i][j] = temp   
+                if (moveVal < bestVal) {
+                    bestMove = [i,j]
+                    bestVal = moveVal
+                }
             }
         }
     }
-    let n = Math.floor(Math.random()*(k.length-1))
-    let cell = k[n]
-    cell.innerHTML = 'X'
-    let a = cell.getAttribute('data-row')
-    let b = cell.getAttribute('data-col')
-    TTTBoard[a][b] = 2
+    return bestMove
 }
 
-function CheckWin() {
-    if (LineCheck(1) === true || ColumnCheck(1) === true || DiaCheck(1) === true) {
-        WinStat = 1
+function minMax(currentBoard, depth, isMaximizing) {
+    let currentStat = CheckWin(currentBoard)
+    if (currentStat === 10) {
+        return currentStat - depth
     }
-    if (LineCheck(2) === true || ColumnCheck(2) === true || DiaCheck(2) === true) {
-        WinStat = 2
+    if (currentStat === -10) {
+        return currentStat + depth
     }
-    if (TieCheck() === true) {
-        WinStat = 3
+    if (TieCheck(currentBoard) === true) {
+        return 0
     }
-    if (WinStat === 1) {
-        board.style.display = 'none'
-        warnBox.innerHTML = "Player 1 has won"
-        warnBox.style.visibility = 'visible'
-    }
-    if (WinStat === 2) {
-        board.style.display = 'none'
-        warnBox.innerHTML = "Player 2 has won"
-        warnBox.style.visibility = 'visible'
-    }
-    if (WinStat === 3) {
-        board.style.display = 'none'
-        warnBox.innerHTML = "It is a Tie"
-        warnBox.style.visibility = 'visible'
+
+    if(isMaximizing) {
+        let maxEval = -1000
+        for (let i = 0; i<3;i++) {
+            for (let j =0; j < 3; j++) {
+                if (currentBoard[i][j] === 0) {
+                    let temp = currentBoard[i][j]
+                    currentBoard[i][j] = 2
+                    let val = minMax(currentBoard, depth+1, false)
+                    currentBoard[i][j] = temp
+                    if (val > maxEval) {
+                        maxEval = val;
+                    }
+                }   
+            }
+        }
+        return maxEval
+    } else { 
+        let minEval = +1000
+        for (let i = 0; i<3;i++) {
+            for (let j=0;j<3;j++) {
+                if (currentBoard[i][j] === 0) {
+                    let temp = currentBoard[i][j]
+                    currentBoard[i][j] = 1
+                    let val = minMax(currentBoard, depth+1, true)
+                    currentBoard[i][j] = temp
+
+                    if (val < minEval) {
+                        minEval = val;
+                    }
+                }
+            }
+        }
+        return minEval
     }
 }
 
-function TieCheck() {
+function CheckWin(currentBoard) {
+    WinStat = 0;
+    if (LineCheck(1,currentBoard) === true || ColumnCheck(1,currentBoard) === true || DiaCheck(1,currentBoard) === true) {
+        WinStat = -10
+    }
+    else
+    if (LineCheck(2,currentBoard) === true || ColumnCheck(2,currentBoard) === true || DiaCheck(2,currentBoard) === true) {
+        WinStat = 10
+    }
+    else
+    if (TieCheck(currentBoard) === true) {
+        WinStat = 0
+    }
+    
+    return WinStat
+}
+
+function TieCheck(currentBoard) {
     let stat = 0;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++){
-            if (TTTBoard[i][j] !== 0) {
+            if (currentBoard[i][j] !== 0) {
                 stat++
                 if (stat === 9) {
                     return true
@@ -141,11 +223,11 @@ function TieCheck() {
     return false
 }
 
-function LineCheck(a) {
+function LineCheck(a,currentBoard) {
     let stat = 0;
     for (i = 0; i < 3; i++) {
         for (j = 0; j < 3; j++){
-            if (TTTBoard[i][j] === a) {
+            if (currentBoard[i][j] === a) {
                 stat++
                 if (stat === 3) {
                     return true
@@ -157,27 +239,27 @@ function LineCheck(a) {
     return false
 } 
 
-function ColumnCheck(a) {
-    if (TTTBoard[0][0] === a &&
-        TTTBoard[1][0] === a &&
-        TTTBoard[2][0] === a)
+function ColumnCheck(a,currentBoard) {
+    if (currentBoard[0][0] === a &&
+        currentBoard[1][0] === a &&
+        currentBoard[2][0] === a)
         return true
-    if (TTTBoard[0][1] === a &&
-        TTTBoard[1][1] === a &&
-        TTTBoard[2][1] === a)
+    if (currentBoard[0][1] === a &&
+        currentBoard[1][1] === a &&
+        currentBoard[2][1] === a)
         return true
-    if (TTTBoard[0][2] === a &&
-        TTTBoard[1][2] === a &&
-        TTTBoard[2][2] === a)
+    if (currentBoard[0][2] === a &&
+        currentBoard[1][2] === a &&
+        currentBoard[2][2] === a)
         return true
     return false
 }
 
-function DiaCheck(a) {
-    if (TTTBoard[0][0] === a && TTTBoard[1][1] === a && TTTBoard[2][2] === a) {
+function DiaCheck(a,currentBoard) {
+    if (currentBoard[0][0] === a && currentBoard[1][1] === a && currentBoard[2][2] === a) {
         return true
     }
-    if (TTTBoard[0][2] === a && TTTBoard[1][1] === a && TTTBoard[2][0] === a) {
+    if (currentBoard[0][2] === a && currentBoard[1][1] === a && currentBoard[2][0] === a) {
         return true
     }
     return false
@@ -223,5 +305,7 @@ function GameStart() {
     }
     warnBox.style.visibility = 'collapse'
     board.style.display = 'grid'
-    WinStat = 0
+    WinStat = null
+    currentPlayer = Players[0]
+    turn = 0;
 }
