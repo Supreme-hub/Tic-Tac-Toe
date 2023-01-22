@@ -11,8 +11,7 @@
 }
 
 .BoxCell {
-    padding-top: 90%;
-    position: relative;
+    aspect-ratio: 1/1;
     width: 100px;
     border: solid 3px black;
     margin: 2px;

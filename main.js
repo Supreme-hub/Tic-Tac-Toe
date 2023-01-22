@@ -131,7 +131,7 @@ function getBestMove(currentBoard) {
             if (currentBoard[i][j] === 0) {
                 let temp = currentBoard[i][j]
                 currentBoard[i][j] = 1
-                let moveVal = minMax(currentBoard,0, true)
+                let moveVal = minMax(currentBoard,0, false)
                 currentBoard[i][j] = temp   
                 if (moveVal < bestVal) {
                     bestMove = [i,j]
